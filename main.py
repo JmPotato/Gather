@@ -37,6 +37,8 @@ class Application(tornado.web.Application):
             (r'/user/([A-Za-z0-9]+)/block',BlockUserHandler),
             (r'/setting',AuthSettingHandler),
             (r'/setting/password',AuthChangePasswordHandler),
+            (r'/setting/getpwd',GetPwdHandler),
+            (r'/setting/resetpwd/(\w{32})',ResetPwdHandler),
 
             (r'/my/post',MyMarkedPostHandler),
             (r'/my/notifications',NotificationHandler),
