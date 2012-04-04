@@ -22,6 +22,7 @@ from t import TwitterOauthHandler,TwitterNotBindHandler,TweetHandler
 from g import ImgurOauthHandler,ImgurUploadHandler,ImgurUnbindHandler
 from common import HomeHandler,FeedHandler,EditModule,ErrorHandler
 from config import config,consumer_key,consumer_secret,database_name
+from pwd import GetPwdHandler,ResetPwdHandler
 import pylibmc
 
 class Application(tornado.web.Application):
