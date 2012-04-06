@@ -8,6 +8,8 @@ from tornado.web import authenticated
 import time
 from re import compile
 from urlparse import urlparse
+import smtplib
+import memcache
 
 username_check = compile(u'([A-Za-z0-9]{1,25})')
 
@@ -143,3 +145,37 @@ class NotificationHandler(BaseHandler):
         u['notification'] = []
         self.db.users.save(u)
         self.redirect(self.get_argument('next', '/'))
+
+class GetPwdHandler(BaseHandler):
+    def makereset(username,email):
+        if self.db.users.find_one({'username':username,'email':email}):
+            #maybe not necessary since post have checked once.
+            key = md5('resetpwd_user_'+username+'_email_'+email).hexdigest()
+            mc = memcache.Client(['127.0.0.1:12000'],debug=0)
+            mc.set(key,username,72000)
+            #expiring time temporarily set to 2hr.
+    
+    def mail(ms,fro,fropwd,to,subj='Password Reset',cont):
+        msg = ['From:%s'%fro,
+            'To:%s'%to,
+            'Subject:%s'%subj,
+            cont]
+        m = smtplib.SMTP()
+        m.connect(ms,25)
+        m.login(fro,fropwd)
+        m.sendmail(fro,to,'\r\n'.join(msg))
+        m.quit()
+        
+    def get(self):
+        self.render('getpwd.html')
+        
+    def post(self):
+        u = self.get_argument('username')
+        m = self.get_argument('email')
+        if u and m and self.db.users.find_one({'username':u,'email':m}):
+            self.mail(ms,adm_mail,adm_mail_pwd,m,,self.makereset(u,m))
+            self.render('getpwd.html?sent_'+m)
+            #only a argumentof that meaning.need to be decided later.
+        else:
+            self.render('getpwd.html?inp_error')
+
