@@ -177,5 +177,5 @@ class GetPwdHandler(BaseHandler):
             self.render('getpwd.html?sent_'+m)
             #only a argumentof that meaning.need to be decided later.
         else:
-            self.render('getpwd.html?inp_error')
+            raise tornado.web.HTTPError(404)
 
