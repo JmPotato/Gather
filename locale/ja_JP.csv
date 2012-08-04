@@ -1,0 +1,125 @@
+"Settings",設定
+"Signin",サインイン
+"Signout",サインアウト
+"Signup",申し込み
+"Save",保存する
+"Admin",管理者
+"SuperAdmin",スーパー管理者
+"Links",リンク
+
+"Search",検索
+
+"Dashboard",ダッシュボード
+"Link",リンク
+"Priority",優先順位
+"Name",名前
+
+"Recent Topics",最近のトピックス
+"Site status",サイトの統計情報
+"Member",会員
+"Members",会員
+"Nodes",ノード
+"Topics",トピックス
+"Replies",応答
+"Description",紹介
+"Website",ウェブサイト
+"Language",言語
+"Avatar",アバター
+"Author",作者
+"Code Block Example",コードブロックの例
+"Choose a node",ノードを選択してください
+
+"Like",いいね
+"Likes",いいね
+"Unlike",嫌う
+"Block",禁じる
+"Unblock",禁止を削除する
+"Reply",応答する
+
+"Add Node",ノードを追加する
+"Edit Node",ノードを編集する
+"Remove Node",ノードを削除する
+"Node Name",ノードID
+"Node Title",ノードのタイトル
+"Custom Html",カスタムHTML
+"Create Topic",トピックを追加する
+"Move Topics To",どこに移動するトピック
+
+"Edit",編集する
+"Remove",削除する
+"Deactive",禁止する
+"Deactived",禁止されています
+"Change Role",ロールを変更
+"Move",移す
+"From",から
+"To",へ
+
+"Follow",フォロー
+"Unfollow",アンフォロー
+"Move Topic",トピックの移動する
+"Created by",この作者は
+"Created at",提出時間は
+"Modified at",修正時間は
+"Last replied at",最新の応答時間は
+"replied at",応答時間は
+"Join at",登録時間は
+"Replied at",応答時間は
+"Posted in",このノードは
+
+"Prev",前のページ
+"Next",次のページ
+
+"Title",タイトル
+"Post",投稿する
+"The title is too long",タイトルは長すぎる
+"The content is too lang",内容が長すぎる
+"The description is too lang",説明が長すぎる
+
+"Old Password",旧パスワード
+"New Password",新規パスワード
+
+"Favorite It",好きだ
+"Unfavorite It",嫌い
+"Followed Members",フォロード
+"View It",このノードを表示する
+"Liked Topics",いいね
+"Favorite Nodes",いいね
+
+"Notifications",通知
+"unread notification",未読の通知
+
+"Username",ユーザ
+"Password",パスワード
+"Confirm",パスワードを確認
+"Email",メール
+
+"More",続きを見る
+"Total %s",合計%sつの項目
+"Clear",クリア
+"in",に
+"mentioned you",あなたに言及し
+"unread",未読
+
+"This node name is already registered",ノード名が存在する
+"This node title is already registered",ノードタイトルが存在する
+"Saved successfully",保存された
+"Removed successfully",削除された
+"Moved successfully",移動した
+"Will be same as the name by default",名前と同じになります
+
+"Are you human?",あなたはHUMANですか?
+"Only English characters and digits are accepted.",ラテン文字と数字のみ
+"Password doesn't match",パスワードエラー
+"Please fill the required field", 必須フィールドは空です。
+"Username is invalid",ユーザー名は無効です。
+"Not a valid email address",メールの形式が正しくありません
+"This username is already registered",ユーザ名が存在する
+"This email is already registered",メールが存在する
+"Invalid account or password",無効なアカウントやパスワード
+"Invalid password",パスワードエラー
+"Your account has been deactived",アカウントが禁止されている
+
+"Already have an account?",サインイン
+"Don't have an account?",申し込み
+
+"Change your avatar at Gravatar",グラバターのアバターを変更します。
