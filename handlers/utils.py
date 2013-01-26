@@ -1,4 +1,3 @@
-
 import re
 from tornado.escape import xhtml_escape, _unicode, _URL_RE
 from pygments import highlight
@@ -10,7 +9,7 @@ email_validator = re.compile(r'^.+@[^.].*\.[a-z]{2,10}$', re.IGNORECASE)
 
 _CODE_RE = re.compile(r'```(\w+)(.+?)```', re.S)
 _MENTION_RE = re.compile(r'((?:^|\W)@\w+)')
-_EMAIL_RE = re.compile(r'([A-Za-z0-9-+.]+@[A-Za-z0-9-.]+)(\s|$)')
+_EMAIL_RE = re.compile(r'(?:\W|)([A-Za-z0-9-+.]+@[A-Za-z0-9-.]+)(\s|$|\W)')
 
 formatter = HtmlFormatter()
 
