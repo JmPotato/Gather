@@ -44,19 +44,12 @@ class Notifier
 
     notify: (avatar, title, content, url = null) ->
         if @enableNotification
-            if not window.Notification
-                popup = window.webkitNotifications.createNotification(avatar, title, content)
-                if url
-                    popup.onclick = ->
-                        window.parent.focus()
-                        $.notifier.visitUrl(url)
-            else
-                opts =
-                    body : content
-                    onclick : ->
-                        window.parent.focus()
-                        $.notifier.visitUrl(url)
-                popup = new window.Notification(title,opts)
+            popup = window.webkitNotifications.createNotification(avatar, title, content)  #TODO:there is a lot of bugs
+            if url
+                popup.onclick = ->
+                    window.focus()
+                    $.notifier.visitUrl(url)
+                    popup.close()
             popup.show()
 
 jQuery.notifier = new Notifier

@@ -20,7 +20,7 @@ class NewNotificationsHandler(BaseHandler):
             topic = self.get_topic(noti['topic'])
             content = html_re.sub('', noti['content'])
             content = tornado.escape.xhtml_unescape(content)
-            avatar = self.get_avatar(member, size=128)[58:126]
+            avatar = self.get_avatar(member, size=128)[59:126]
             notifications.append({
                 'id': str(noti['_id']),
                 'avatar': avatar,
