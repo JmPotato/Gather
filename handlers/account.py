@@ -102,7 +102,7 @@ class SettingsHandler(BaseHandler):
         description = self.get_argument('description', '')
         language = self.get_argument('language')
         if len(description) > 1500:
-            self.flash("The description is too lang")
+            self.flash("The description is too long")
         self.db.members.update({'_id': self.current_user['_id']}, {'$set': {
             'website': website,
             'description': description,
