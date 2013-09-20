@@ -9,6 +9,7 @@ email_validator = re.compile(r'^.+@[^.].*\.[a-z]{2,10}$', re.IGNORECASE)
 
 _CODE_RE = re.compile(r'```(\w+)(.+?)```', re.S)
 _MENTION_RE = re.compile(r'((?:^|\W)@\w+)')
+_FLOOR_RE = re.compile(r'((?:^|\W)#\d+)')
 _EMAIL_RE = re.compile(r'([A-Za-z0-9-+.]+@[A-Za-z0-9-.]+)(\s|$)')
 
 formatter = HtmlFormatter()
@@ -49,6 +50,13 @@ def make_content(text, extra_params='rel="nofollow"'):
             u'@%(user)s</a>'
         return t % data
 
+    def convert_floor(m):
+        data = {}
+        data['begin'], data['floor'] = m.group(1).split('#')
+        t = u'%(begin)s<a href="#reply%(floor)s" class="mention mention_floor">' \
+            u'#%(floor)s</a>'
+        return t % data
+
     def highligt(m):
         try:
             name = m.group(1)
@@ -64,4 +72,5 @@ def make_content(text, extra_params='rel="nofollow"'):
     text = _CODE_RE.sub(highligt, text).replace('\n', '<br />')
     text = _EMAIL_RE.sub(cover_email, text)
     text = _MENTION_RE.sub(convert_mention, text)
+    text = _FLOOR_RE.sub(convert_floor, text)
     return _URL_RE.sub(make_link, text)
