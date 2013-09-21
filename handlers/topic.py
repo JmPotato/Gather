@@ -65,7 +65,7 @@ class CreateHandler(BaseHandler):
         if len(title) > 100:
             self.flash("The title is too long")
         if len(content) > 20000:
-            self.flash("The content is too lang")
+            self.flash("The content is too long")
         if not self.get_node(node):
             raise tornado.web.HTTPError(403)
         if self.messages:
@@ -107,7 +107,7 @@ class ReplyHandler(BaseHandler):
         if not content:
             self.flash('Please fill the required field')
         elif len(content) > 20000:
-            self.flash("The content is too lang")
+            self.flash("The content is too long")
         if self.messages:
             self.redirect('/topic/%s' % topic_id)
             return
@@ -187,7 +187,7 @@ class EditHandler(BaseHandler):
         if len(title) > 100:
             self.flash("The title is too long")
         if len(content) > 20000:
-            self.flash("The content is too lang")
+            self.flash("The content is too long")
         if self.messages:
             self.render('topic/edit.html', topic=topic)
             return
@@ -244,7 +244,7 @@ class EditReplyHandler(BaseHandler):
         if not content:
             self.flash('Please fill the required field')
         elif len(content) > 20000:
-            self.flash("The content is too lang")
+            self.flash("The content is too long")
         if self.messages:
             self.render('topic/edit_reply.html', reply=reply)
             return
