@@ -59,7 +59,7 @@ class CreateHandler(BaseHandler):
     def post(self):
         node = self.get_argument("node", '')
         title = self.get_argument('title', '')
-        content = self.get_argument('content', '')
+        content = self.get_argument('content', '').replace('http://i.imgur.com', 'https:/i.imgur.com')
         if not (node and title and content):
             self.flash('Please fill the required field')
         if len(title) > 100:
@@ -103,7 +103,7 @@ class CreateHandler(BaseHandler):
 class ReplyHandler(BaseHandler):
     @tornado.web.authenticated
     def post(self, topic_id):
-        content = self.get_argument('content', None)
+        content = self.get_argument('content', None).replace('http://i.imgur.com', 'https://i.imgur.com')
         if not content:
             self.flash('Please fill the required field')
         elif len(content) > 20000:
@@ -181,7 +181,7 @@ class EditHandler(BaseHandler):
         topic = self.get_topic(topic_id)
         self.check_role(owner_name=topic['author'])
         title = self.get_argument('title', '')
-        content = self.get_argument('content', '')
+        content = self.get_argument('content', '').replace('http://i.imgur.com', 'https://i.imgur.com')
         if not (title and content):
             self.flash('Please fill the required field')
         if len(title) > 100:
@@ -240,7 +240,7 @@ class EditReplyHandler(BaseHandler):
         if not reply:
             raise tornado.web.HTTPError(404)
         self.check_role(owner_name=reply['author'])
-        content = self.get_argument('content', '')
+        content = self.get_argument('content', '').replace('http://i.imgur.com', 'https://i.imgur.com')
         if not content:
             self.flash('Please fill the required field')
         elif len(content) > 20000:
