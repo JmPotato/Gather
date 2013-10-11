@@ -6,7 +6,7 @@
     {% raw handler.get_avatar(author) %}
     <div class="list-content">
         <p>
-            <a href="/topic/{{ topic['_id'] }}?p={{ last_page }}#reply{{ reply_nums }}">{{ topic['title'] }}</a>
+            <a href="/topic/{{ topic['_id'] }}?p={{ last_page }}">{{ topic['title'] }}</a>
     
             <a href="/topic/{{ topic['_id'] }}?p={{ last_page }}#reply{{ reply_nums }}" class="badge
             {% if current_user and current_user['name_lower'] not in topic.get('read', []) %}badge-success{%end%}

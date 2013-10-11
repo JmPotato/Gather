@@ -103,6 +103,11 @@ body{
   border-bottom: 1px solid #DDD;
 }
 
+.floor{
+  position:relative;
+  top:-55px;
+}
+
 #profile_main{
   height: $avatar_large;
   font-size: 15px;
