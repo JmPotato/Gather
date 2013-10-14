@@ -11,7 +11,7 @@ _ = (msg) ->
   return msg
 
 window.notify = () ->
-  setTimeout(window.notify, 20000)
+  setTimeout(window.notify, 30000)
   $.ajax
     url: "/api/notifications/new"
     success: (data) ->
@@ -34,6 +34,29 @@ floor_link_page = ->
       (floor_num + @replies_per_page - 1) / @replies_per_page)
     floor_page = parseInt(floor_page)
     i.href = "?p=#{floor_page}#reply#{floor_num}"
+  return
+
+topic_link = ->
+  element = $(".mention.mention_topic")
+  elements = {}
+  for i in element
+    _id = $(i).attr("_id")
+    if not elements[_id]
+      elements[_id] = []
+    elements[_id].push({"_id": _id, "object": i})
+    $.ajax({
+      url: "/api/topic/#{_id}",
+      cache: false,
+      success: (data) ->
+        object = elements[data._id][0].object
+        object.innerHTML = data.title
+        object.title = data.content.slice(0, 30)
+        if data.content.length > 30
+          object.title += "..."
+        elements[data._id] = elements[data._id].slice(1)
+        return
+    })
+  return
 
 $ ->
   notify()
@@ -54,4 +77,5 @@ $ ->
           $this.parents(".list").remove()
     return false
   floor_link_page()
+  topic_link()
   return

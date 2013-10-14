@@ -41,6 +41,19 @@ class NewNotificationsHandler(BaseHandler):
         # https://github.com/facebook/tornado/blob/master/tornado/web.py#L501
 
 
+class TopicAsJSONHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self, topic_id):
+        d = dict(**self.get_topic(topic_id))
+        d['_id'] = str(d['_id'])
+        replies = self.db.replies.find({'topic': topic_id},
+                                            sort=[('index', 1)])
+        d['replies_count'] = str(replies.count())
+
+        self.write(d) # isinstance(d, dict) == True
+
+
 handlers = [
     (r'/api/notifications/new', NewNotificationsHandler),
+    (r'/api/topic/(\w+)', TopicAsJSONHandler),
 ]

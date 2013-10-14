@@ -13,6 +13,7 @@ email_validator = re.compile(r'^.+@[^.].*\.[a-z]{2,10}$', re.IGNORECASE)
 _CODE_RE = re.compile(r'```(\w+)(.+?)```', re.S)
 _MENTION_RE = re.compile(r'((?:^|\W)@\w+)')
 _FLOOR_RE = re.compile(r'((?:^|\W)#\d+)')
+_TOPIC_RE = re.compile(r'((?:^|\W)t[a-z0-9]{24})')
 _EMAIL_RE = re.compile(r'([A-Za-z0-9-+.]+@[A-Za-z0-9-.]+)(\s|$)')
 
 formatter = HtmlFormatter()
@@ -56,8 +57,17 @@ def make_content(text, extra_params='rel="nofollow"'):
     def convert_floor(m):
         data = {}
         data['begin'], data['floor'] = m.group(1).split('#')
-        t = u'%(begin)s<a href="#reply%(floor)s" class="mention mention_floor">' \
-            u'#%(floor)s</a>'
+        t = u'%(begin)s<a href="#reply%(floor)s"' \
+            ' class="mention mention_floor">#%(floor)s</a>'
+        return t % data
+
+    def convert_topic(m):
+        data = {}
+        data['begin'], data['topic_link'] = m.group(1).split('t')
+        data['topic_link_short'] = data['topic_link'][:6]
+        t = u"""%(begin)s<a href="%(topic_link)s"
+            class="mention mention_topic"
+            _id=%(topic_link)s>t%(topic_link_short)s</a>"""
         return t % data
 
     def highligt(m):
@@ -76,6 +86,7 @@ def make_content(text, extra_params='rel="nofollow"'):
     text = _EMAIL_RE.sub(cover_email, text)
     text = _MENTION_RE.sub(convert_mention, text)
     text = _FLOOR_RE.sub(convert_floor, text)
+    text = _TOPIC_RE.sub(convert_topic, text)
     return _URL_RE.sub(make_link, text)
 
 
