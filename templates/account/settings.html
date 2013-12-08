@@ -29,7 +29,7 @@
             <div class="control-group">
                 <label class="control-label" for="feed">{{ _("Feed") }}</label>
                 <div class="controls">
-                    <input type="text" class="input-xxlarge" id="feed" name="feed" value="{{ current_user['feed'] }}">
+                    <input type="text" class="input-xxlarge" id="feed" name="feed" value="{{ current_user.get('feed', '') }}">
                 </div>
             </div>
             {% if handler.application.settings.get("pushover_token", "") %}
