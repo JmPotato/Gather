@@ -14,9 +14,16 @@ import init_db
 
 db = init_db.db
 settings = vars(__import__("settings"))
+mutex = threading.Lock()
 
+def _print(message):
+    while not mutex.acquire(False):  # Do not block if unable to acquire.
+        time.sleep(random.random())
+    print message
+    mutex.release()
+        
 
-class FeedSummaryHTMLFilter(HTMLParser):
+class FeedSummaryHTMLFilter(HTMLParser, object):
     def __init__(self):
         self.HTML = ''
         self.TEXT = ''
@@ -39,7 +46,7 @@ class FeedSummaryHTMLFilter(HTMLParser):
             'q',
             'blockquote',
         ]
-        HTMLParser.__init__(self)
+        super(FeedSummaryHTMLFilter, self).__init__()
 
     def handle_starttag(self, tag, attrs, ending=">"):
         if tag in self.handle_tags:
@@ -83,13 +90,14 @@ class FeedSyncThread(threading.Thread):
 
     def run(self):
         feed = self.user.get('feed')
-        role = True if self.user.get('role') >= 2 else False
-        if feed and role:
+        is_admin = True if self.user['role'] >= 2 else False
+        if feed and is_admin:
             parser = feedparser.parse(feed)
             for entry in parser.get('entries'):
                 title = entry.get('title') or parser['feed'].get('title') or \
                     'An Article Created by %s' % self.user['name']
-                link = entry.get('links')[0].get('href') or feed.get('href')
+                link = entry.get('links')[0].get('href') or \
+                    parser['feed'].get('href')
                 summary = entry.get('summary') or entry.get('value')
                 _parser = FeedSummaryHTMLFilter()
                 _parser.feed(summary)
@@ -125,15 +133,15 @@ class FeedSyncThread(threading.Thread):
                     db.members.update({'_id': self.user['_id']}, {
                         '$set': {'feed_last_updated': date}})
 
-        sys.stdout.write('%s exited.\n' % self.getName())
+        _print('%s exited.' % self.getName())
 
 
 class FeedSyncHandler(object):
     def __init__(self):
-        sys.stdout.write('Now begin.\n')
+        _print('Now begin.')
         for user in db.members.find():
             syncThread = FeedSyncThread(user=user)
-            sys.stdout.write('%s for user %s...\n' % (syncThread.getName(),
+            _print('%s for user %s...' % (syncThread.getName(),
                 user['name_lower']))
             syncThread.start()
             time.sleep(random.random())  # cooldown
