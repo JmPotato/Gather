@@ -13,7 +13,6 @@ import init_db
 db = init_db.db
 settings = vars(__import__("settings"))
 mutex = threading.Lock()
-mutex_for_data = threading.Lock()
 
 
 def _print(message, self=None):
@@ -94,8 +93,6 @@ class FeedSyncThread(threading.Thread):
         self.user = user
 
     def run(self):
-        while not mutex_for_data.acquire(False):  # Do not block if unable to acquire.
-            time.sleep(random.random())
         feed = self.user.get('feed')
         is_admin = True if self.user['role'] >= 2 else False
         if feed and is_admin:
@@ -144,7 +141,6 @@ class FeedSyncThread(threading.Thread):
                     db.members.update({'name': self.user['name']},
                         {'$set': {'feed_last_updated': date}})
 
-        mutex_for_data.release()
         _print('%s exited.' % self.getName())
 
 
