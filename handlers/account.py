@@ -100,6 +100,7 @@ class SettingsHandler(BaseHandler):
     def post(self):
         website = self.get_argument('website', '')
         description = self.get_argument('description', '')
+        feed = self.get_argument('feed', '')
         pushover = self.get_argument('pushover', '')
         language = self.get_argument('language')
         if len(description) > 1500:
@@ -108,6 +109,7 @@ class SettingsHandler(BaseHandler):
             'website': website,
             'description': description,
             'language': language,
+            'feed': feed,
             'pushover': pushover
         }})
         self.flash('Saved successfully', type='success')

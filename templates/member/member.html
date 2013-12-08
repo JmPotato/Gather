@@ -14,8 +14,14 @@
         {% end %}
         <p class="username">{{ member['name'] }}</p>
         <p>{{ _("Join at") }} {% raw handler.format_time(member['created']) %}</p>
+        {% if member['website'] or member['feed'] %}
+        <p>
         {% if member['website'] %}
-        <p><a href="{{ member['website'] }}" rel="nofollow">{{ member['website'] }}</a></p>
+            <a href="{{ member['website'] }}" rel="nofollow">{{ member['website'] }}</a>
+        {% end %}
+        {% if member['feed'] %}
+            <a href="{{ member['feed'] }}" rel="nofollow">({{ _("Feed Path") }})</a>
+        {% end %}
         {% end %}
     </div>
     {% if member['description'] %}

@@ -26,6 +26,12 @@
                     <input type="text" class="input-xxlarge" id="website" name="website" value="{{ current_user['website'] }}">
                 </div>
             </div>
+            <div class="control-group">
+                <label class="control-label" for="feed">{{ _("Feed") }}</label>
+                <div class="controls">
+                    <input type="text" class="input-xxlarge" id="feed" name="feed" value="{{ current_user['feed'] }}">
+                </div>
+            </div>
             {% if handler.application.settings.get("pushover_token", "") %}
             <div class="control-group">
                 <label class="control-label" for="website">{{ _("Pushover Key") }}</label>
