@@ -18,6 +18,8 @@ members_per_page = 100
 topics_per_page = 20
 replies_per_page = topics_per_page
 
+blog_center_node = "Blog Center"
+#Note: It MUST be created by yourself.
 pushover_token = ""
 gravatar_base_url = 'http://cn.gravatar.com/avatar/'
 google_analytics = ''
