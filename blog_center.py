@@ -1,8 +1,6 @@
 #coding=utf-8
 
-import sys
 import os
-import logging
 import threading
 import time
 import random
@@ -15,13 +13,20 @@ import init_db
 db = init_db.db
 settings = vars(__import__("settings"))
 mutex = threading.Lock()
+mutex_for_data = threading.Lock()
 
-def _print(message):
+
+def _print(message, self=None):
     while not mutex.acquire(False):  # Do not block if unable to acquire.
         time.sleep(random.random())
-    print message
+
+    if not self:
+        print message
+    else:
+        print '[%s] %s' % (self.getName(), message)
+
     mutex.release()
-        
+
 
 class FeedSummaryHTMLFilter(HTMLParser, object):
     def __init__(self):
@@ -89,11 +94,13 @@ class FeedSyncThread(threading.Thread):
         self.user = user
 
     def run(self):
+        while not mutex_for_data.acquire(False):  # Do not block if unable to acquire.
+            time.sleep(random.random())
         feed = self.user.get('feed')
         is_admin = True if self.user['role'] >= 2 else False
         if feed and is_admin:
             parser = feedparser.parse(feed)
-            for entry in parser.get('entries'):
+            for entry in parser.get('entries')[::-1]:
                 title = entry.get('title') or parser['feed'].get('title') or \
                     'An Article Created by %s' % self.user['name']
                 link = entry.get('links')[0].get('href') or \
@@ -112,9 +119,11 @@ class FeedSyncThread(threading.Thread):
                     entry.get('updated_parsed')
                 date = time.mktime(date)
 
-                last_time = self.user.get('feed_last_updated', 0)
+                last_time = db.members.find_one(
+                    {'_id': self.user['_id']}).get('feed_last_updated', 0)
 
                 if date > last_time:
+                    _print('Creating new article: %s' % title, self)
                     time_now = time.time()
                     node = settings['blog_center_node']
                     data = {
@@ -130,20 +139,33 @@ class FeedSyncThread(threading.Thread):
                         'source': 'Feed Robot',
                     }
                     db.topics.insert(data)
-                    db.members.update({'_id': self.user['_id']}, {
-                        '$set': {'feed_last_updated': date}})
+                    _print('Created article successfully. ' \
+                        'feed_last_updated = %s' % date, self)
+                    db.members.update({'name': self.user['name']},
+                        {'$set': {'feed_last_updated': date}})
 
+        mutex_for_data.release()
         _print('%s exited.' % self.getName())
 
 
 class FeedSyncHandler(object):
     def __init__(self):
-        _print('Now begin.')
         for user in db.members.find():
             syncThread = FeedSyncThread(user=user)
             _print('%s for user %s...' % (syncThread.getName(),
                 user['name_lower']))
             syncThread.start()
-            time.sleep(random.random())  # cooldown
+            while int(syncThread.getName()[-1]) > 5:
+                time.sleep(random.random())  # cooldown
 
-syncHandler = FeedSyncHandler()
+_print('Now begin.')
+
+command = __import__('sys').argv[1:]
+
+if 'clear' in command or '-c' in command or '--clear' in command:
+    for user in db.members.find():
+        db.members.update({'_id': user['_id']},
+            {"$set": {'feed_last_updated': 0}})
+        _print('Clean feed_last_updated for user %s successfully.' % user['name'])
+else:
+    syncHandler = FeedSyncHandler()
