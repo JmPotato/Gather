@@ -22,7 +22,7 @@ def _print(message, self=None):
         time.sleep(random.random())
 
     if not self:
-        print message
+        print '[Master] %s' % message
     else:
         print '[%s] %s' % (self.getName(), message)
 
@@ -107,35 +107,30 @@ class FeedSyncThread(threading.Thread):
     def run(self):
         self.website = self.user.get('website')
         self.feed = ''
-        self._parser = HTMLFilter('link')
-        if self.website:
-            url = urllib2.urlopen(self.website)
-            read = ''
-            new_read = ''
-            while new_read or not read:
-                new_read = url.read(1024)
-                if new_read:
-                    read += new_read
-                self._parser.feed(read)
-
-        for i in self._parser.get_result():
-            if ('rel', 'alternate') in i \
-                or ('type', 'application/rss+xml') in i \
-                or ('type', 'application/atom+xml') in i:
-                for j in i:
-                    if j[0] == 'href':
-                        if re.findall('[a-zA-z]+://[^\s]*', j[1]):
-                            self.feed = j[1]
-                        else:
-                            if not j[1].startswith('/'):
-                                j[1] = '/' + j[1]
-                            if self.website.endswith('/'):
-                                self.website = self.website[:-1]
-                            self.feed = self.website + j[1]
-
+        _parser = HTMLFilter('link')
         is_admin = True if self.user['role'] >= 2 else False
 
-        if self.feed and is_admin:
+        if self.website and is_admin:
+            url = urllib2.urlopen(self.website)
+            _parser.feed(url.read())
+
+            for i in _parser.get_result():
+                if ('rel', 'alternate') in i \
+                    or ('type', 'application/rss+xml') in i \
+                    or ('type', 'application/atom+xml') in i:
+                    for j in i:
+                        if j[0] == 'href':
+                            if re.findall('[a-zA-z]+://[^\s]*', j[1]):
+                                self.feed = j[1]
+                            else:
+                                if not j[1].startswith('/'):
+                                    j[1] = '/' + j[1]
+                                if self.website.endswith('/'):
+                                    self.website = self.website[:-1]
+                                self.feed = self.website + j[1]
+
+        if self.feed:
+            _print('Find out a feed address: %s' % self.feed, self)
             parser = feedparser.parse(self.feed)
             for entry in parser.get('entries')[::-1]:
                 title = entry.get('title') or parser['feed'].get('title') or \
