@@ -1,11 +1,13 @@
 #coding=utf-8
 
 import os
+import re
 import threading
 import time
 import random
-from HTMLParser import HTMLParser
+import urllib2
 import feedparser
+from HTMLParser import HTMLParser
 #Note: The HTMLParser module has been renamed to html.parser in Python 3.
 
 import init_db
@@ -27,8 +29,11 @@ def _print(message, self=None):
     mutex.release()
 
 
-class FeedSummaryHTMLFilter(HTMLParser, object):
-    def __init__(self):
+class HTMLFilter(HTMLParser, object):
+    def __init__(self, find_tag=False):
+        super(HTMLFilter, self).__init__()
+        self.find_tag = find_tag
+        self.attrs = []
         self.HTML = ''
         self.TEXT = ''
         self.handle_tags = [
@@ -50,10 +55,13 @@ class FeedSummaryHTMLFilter(HTMLParser, object):
             'q',
             'blockquote',
         ]
-        super(FeedSummaryHTMLFilter, self).__init__()
 
     def handle_starttag(self, tag, attrs, ending=">"):
-        if tag in self.handle_tags:
+        if tag == self.find_tag:
+            self.attrs += [attrs]
+            return
+
+        if tag in self.handle_tags and not self.find_tag:
             self.HTML += "<%(tag)s" % vars()
 
             if attrs:
@@ -64,7 +72,7 @@ class FeedSummaryHTMLFilter(HTMLParser, object):
             self.HTML += os.linesep
 
     def handle_endtag(self, tag):
-        if tag in self.handle_tags:
+        if tag in self.handle_tags and not self.find_tag:
             self.HTML += "</%(tag)s>" % vars()
             self.HTML += os.linesep
 
@@ -72,13 +80,17 @@ class FeedSummaryHTMLFilter(HTMLParser, object):
         self.handle_starttag(tag, attrs, ending="/>")
 
     def handle_data(self, data):
-        self.HTML += data
-        self.HTML += os.linesep
-        self.TEXT += data
-        self.TEXT += os.linesep
+        if not self.find_tag:
+            self.HTML += data
+            self.HTML += os.linesep
+            self.TEXT += data
+            self.TEXT += os.linesep
 
     def get_result(self, what='both'):
         # what = what.strip().lower()
+        if self.find_tag:
+            return self.attrs
+
         if what == 'both':
             return (self.HTML, self.TEXT)
         elif what == 'html':
@@ -93,17 +105,45 @@ class FeedSyncThread(threading.Thread):
         self.user = user
 
     def run(self):
-        feed = self.user.get('feed')
+        self.website = self.user.get('website')
+        self.feed = ''
+        self._parser = HTMLFilter('link')
+        if self.website:
+            url = urllib2.urlopen(self.website)
+            read = ''
+            new_read = ''
+            while new_read or not read:
+                new_read = url.read(1024)
+                if new_read:
+                    read += new_read
+                self._parser.feed(read)
+
+        for i in self._parser.get_result():
+            if ('rel', 'alternate') in i \
+                or ('type', 'application/rss+xml') in i \
+                or ('type', 'application/atom+xml') in i:
+                for j in i:
+                    if j[0] == 'href':
+                        if re.findall('[a-zA-z]+://[^\s]*', j[1]):
+                            self.feed = j[1]
+                        else:
+                            if not j[1].startswith('/'):
+                                j[1] = '/' + j[1]
+                            if self.website.endswith('/'):
+                                self.website = self.website[:-1]
+                            self.feed = self.website + j[1]
+
         is_admin = True if self.user['role'] >= 2 else False
-        if feed and is_admin:
-            parser = feedparser.parse(feed)
+
+        if self.feed and is_admin:
+            parser = feedparser.parse(self.feed)
             for entry in parser.get('entries')[::-1]:
                 title = entry.get('title') or parser['feed'].get('title') or \
                     'An Article Created by %s' % self.user['name']
                 link = entry.get('links')[0].get('href') or \
                     parser['feed'].get('href')
                 summary = entry.get('summary') or entry.get('value')
-                _parser = FeedSummaryHTMLFilter()
+                _parser = HTMLFilter()
                 _parser.feed(summary)
                 summary_html = summary_text = 'Original Page Link:' \
                     '<a href="%(link)s"> %(link)s</a>' % vars()
