@@ -4,7 +4,6 @@ import sys
 import os
 import re
 import time
-import random
 import urllib2
 import feedparser
 import traceback
@@ -90,30 +89,33 @@ class HTMLFilter(HTMLParser, object):
             return self.TEXT
 
 
-class FeedSyncFunction(object):
+class FeedSyncHandler(object):
     def __init__(self, user):
         self.user = user
 
     def run(self):
         self.website = self.user.get('website')
         self.feed = ''
-        _parser = HTMLFilter('link')
+
+        _html_parser = HTMLFilter('link')
         is_admin = True if self.user['role'] >= 2 else False
 
         if self.website and is_admin:
             url = urllib2.urlopen(self.website)
-            _parser.feed(url.read())
+            _html_parser.feed(url.read())
 
-            for i in _parser.get_result():
+            for i in _html_parser.get_result():
                 if ('rel', 'alternate') in i \
                     or ('type', 'application/rss+xml') in i \
                         or ('type', 'application/atom+xml') in i:
                         for j in i:
                             if j[0] == 'title' and \
-                                ('comment' in j[1] or u'评论' in j[1]):
+                                    ('comment' in j[1] or u'评论' in j[1]):
                                 break  # 不处理评论 feed。
+
                             if j[0] == 'href':
                                 if re.findall('[a-zA-z]+://[^\s]*', j[1]):
+                                #如果是绝对地址
                                     self.feed = j[1]
                                 else:
                                     if not j[1].startswith('/'):
@@ -123,28 +125,34 @@ class FeedSyncFunction(object):
                                     self.feed = self.website + j[1]
 
                 if self.feed:
-                    break
+                    break  # 如果已经找到 feed 地址就别浪费计算力了。
 
         if self.feed:
             print 'Find out a feed address: %s' % self.feed
-            parser = feedparser.parse(self.feed)
-            for entry in parser.get('entries')[::-1]:
-                title = entry.get('title') or parser['feed'].get('title') or \
-                    'An Article Created by %s' % self.user['name']
-                link = entry.get('links')[0].get('href') or \
-                    parser['feed'].get('href')
+            _feed_parser = feedparser.parse(self.feed)
+
+            for entry in _feed_parser.get('entries')[::-1]:
+                title = entry.get('title') \
+                    or _feed_parser['feed'].get('title') \
+                    or 'An Article Created by %s' % self.user['name']
+                link = entry.get('links')[0].get('href') \
+                    or _feed_parser['feed'].get('href')
                 summary = entry.get('summary') or entry.get('value')
+
                 if len(summary) < 100:
                     summary = entry.get('content')[0].get('value', summary)
-                _parser = HTMLFilter()
-                _parser.feed(summary)
+
+                _html_filter = HTMLFilter()
+                _html_filter.feed(summary)
                 summary_html = summary_text = 'Original Page Link:' \
                     '<a href="%(link)s">%(link)s</a>' % {'link': link}
                 summary_html += '<br/>' * 2
                 summary_text += os.linesep * 2
-                summary_html += _parser.get_result('html')
-                summary_text += _parser.get_result('text')
+                summary_html += _html_filter.get_result('html')
+                summary_text += _html_filter.get_result('text')
+
                 del summary
+
                 date = entry.get('published_parsed') or \
                     entry.get('updated_parsed')
                 date = time.mktime(date)
@@ -170,17 +178,7 @@ class FeedSyncFunction(object):
                     }
                     db.topics.insert(data)
                     db.members.update({'name': self.user['name']},
-                        {'$set': {'feed_last_updated': date}})
-
-
-class FeedSyncHandler(object):
-    def __init__(self):
-        for user in db.members.find():
-            syncFunction = FeedSyncFunction(user=user)
-            try:
-                syncFunction.run()
-            except:
-                print traceback.print_exc()
+                                      {'$set': {'feed_last_updated': date}})
 
 
 command = sys.argv[1:]
@@ -188,7 +186,14 @@ command = sys.argv[1:]
 if 'clear' in command or '-c' in command or '--clear' in command:
     for user in db.members.find():
         db.members.update({'_id': user['_id']},
-            {"$set": {'feed_last_updated': 0}})
+                          {"$set": {'feed_last_updated': 0}})
+
     print 'Clean feed_last_updated successfully.'
+
 else:
-    syncHandler = FeedSyncHandler()
+    for user in db.members.find():
+        syncHandler = FeedSyncHandler(user=user)
+        try:
+            syncHandler.run()
+        except:
+            traceback.print_exc()
