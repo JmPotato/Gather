@@ -1,32 +1,23 @@
 #coding=utf-8
 
+import sys
 import os
 import re
-import threading
 import time
 import random
 import urllib2
 import feedparser
+import traceback
 from HTMLParser import HTMLParser
 #Note: The HTMLParser module has been renamed to html.parser in Python 3.
-
 import init_db
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
+#否则，一些 WordPress 网站会导致 UnicodeDecodeError。
 
 db = init_db.db
 settings = vars(__import__("settings"))
-mutex = threading.Lock()
-
-
-def _print(message, self=None):
-    while not mutex.acquire(False):  # Do not block if unable to acquire.
-        time.sleep(random.random())
-
-    if not self:
-        print '[Master] %s' % message
-    else:
-        print '[%s] %s' % (self.getName(), message)
-
-    mutex.release()
 
 
 class HTMLFilter(HTMLParser, object):
@@ -99,9 +90,8 @@ class HTMLFilter(HTMLParser, object):
             return self.TEXT
 
 
-class FeedSyncThread(threading.Thread):
+class FeedSyncFunction(object):
     def __init__(self, user):
-        super(FeedSyncThread, self).__init__()
         self.user = user
 
     def run(self):
@@ -117,20 +107,26 @@ class FeedSyncThread(threading.Thread):
             for i in _parser.get_result():
                 if ('rel', 'alternate') in i \
                     or ('type', 'application/rss+xml') in i \
-                    or ('type', 'application/atom+xml') in i:
-                    for j in i:
-                        if j[0] == 'href':
-                            if re.findall('[a-zA-z]+://[^\s]*', j[1]):
-                                self.feed = j[1]
-                            else:
-                                if not j[1].startswith('/'):
-                                    j[1] = '/' + j[1]
-                                if self.website.endswith('/'):
-                                    self.website = self.website[:-1]
-                                self.feed = self.website + j[1]
+                        or ('type', 'application/atom+xml') in i:
+                        for j in i:
+                            if j[0] == 'title' and \
+                                ('comment' in j[1] or u'评论' in j[1]):
+                                break  # 不处理评论 feed。
+                            if j[0] == 'href':
+                                if re.findall('[a-zA-z]+://[^\s]*', j[1]):
+                                    self.feed = j[1]
+                                else:
+                                    if not j[1].startswith('/'):
+                                        j[1] = '/' + j[1]
+                                    if self.website.endswith('/'):
+                                        self.website = self.website[:-1]
+                                    self.feed = self.website + j[1]
+
+                if self.feed:
+                    break
 
         if self.feed:
-            _print('Find out a feed address: %s' % self.feed, self)
+            print 'New feed address: %s' % self.feed
             parser = feedparser.parse(self.feed)
             for entry in parser.get('entries')[::-1]:
                 title = entry.get('title') or parser['feed'].get('title') or \
@@ -138,10 +134,12 @@ class FeedSyncThread(threading.Thread):
                 link = entry.get('links')[0].get('href') or \
                     parser['feed'].get('href')
                 summary = entry.get('summary') or entry.get('value')
+                if len(summary) < 100:
+                    summary = entry.get('content')[0].get('value') or summary
                 _parser = HTMLFilter()
                 _parser.feed(summary)
                 summary_html = summary_text = 'Original Page Link:' \
-                    '<a href="%(link)s"> %(link)s</a>' % vars()
+                    '<a href="%(link)s">%(link)s</a>' % {'link': link}
                 summary_html += '<br/>' * 2
                 summary_text += os.linesep * 2
                 summary_html += _parser.get_result('html')
@@ -155,7 +153,7 @@ class FeedSyncThread(threading.Thread):
                     {'_id': self.user['_id']}).get('feed_last_updated', 0)
 
                 if date > last_time:
-                    _print('Creating new article: %s' % title, self)
+                    print 'Creating new article: %s' % title
                     time_now = time.time()
                     node = settings['blog_center_node']
                     data = {
@@ -171,32 +169,26 @@ class FeedSyncThread(threading.Thread):
                         'source': 'Feed Robot',
                     }
                     db.topics.insert(data)
-                    _print('Created article successfully. ' \
-                        'feed_last_updated = %s' % date, self)
                     db.members.update({'name': self.user['name']},
                         {'$set': {'feed_last_updated': date}})
-
-        _print('%s exited.' % self.getName())
 
 
 class FeedSyncHandler(object):
     def __init__(self):
         for user in db.members.find():
-            syncThread = FeedSyncThread(user=user)
-            _print('%s for user %s...' % (syncThread.getName(),
-                user['name_lower']))
-            syncThread.start()
-            while int(syncThread.getName()[-1]) > 5:
-                time.sleep(random.random())  # cooldown
+            syncFunction = FeedSyncFunction(user=user)
+            try:
+                syncFunction.run()
+            except:
+                print traceback.print_exc()
 
-_print('Now begin.')
 
-command = __import__('sys').argv[1:]
+command = sys.argv[1:]
 
 if 'clear' in command or '-c' in command or '--clear' in command:
     for user in db.members.find():
         db.members.update({'_id': user['_id']},
             {"$set": {'feed_last_updated': 0}})
-        _print('Clean feed_last_updated for user %s successfully.' % user['name'])
+    print 'Clean feed_last_updated successfully.'
 else:
     syncHandler = FeedSyncHandler()
