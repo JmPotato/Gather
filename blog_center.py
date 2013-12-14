@@ -126,7 +126,7 @@ class FeedSyncFunction(object):
                     break
 
         if self.feed:
-            print 'New feed address: %s' % self.feed
+            print 'Find out a feed address: %s' % self.feed
             parser = feedparser.parse(self.feed)
             for entry in parser.get('entries')[::-1]:
                 title = entry.get('title') or parser['feed'].get('title') or \
@@ -135,7 +135,7 @@ class FeedSyncFunction(object):
                     parser['feed'].get('href')
                 summary = entry.get('summary') or entry.get('value')
                 if len(summary) < 100:
-                    summary = entry.get('content')[0].get('value') or summary
+                    summary = entry.get('content')[0].get('value', summary)
                 _parser = HTMLFilter()
                 _parser.feed(summary)
                 summary_html = summary_text = 'Original Page Link:' \
