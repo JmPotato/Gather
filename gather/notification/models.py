@@ -3,10 +3,11 @@
 from __future__ import unicode_literals
 
 from gather.extensions import db, cache
-
+from gather.account.models import Account
+from gather.topic.models import Topics
 
 class Notification(db.Model):
-    author = db.relationship(Reply)
+    author = db.relationship(Account)
     topic = db.relationship(Topic)
     created = db.Column(
         db.Datetime,
@@ -20,3 +21,4 @@ class Notification(db.Model):
         db.Text(),
         db.ForeignKey('Reply.content')
     )
+    floor = db.Column(db.Integer, nullable=False)

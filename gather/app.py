@@ -10,6 +10,7 @@ from jinja2 import MemcachedBytecodeCache
 from gather.extensions import db, assets, mail, cache
 from gather.settings import load_settings
 from gather.account.utils import get_current_user
+from gather.nitification.utils import get_notification
 
 
 def create_app():
@@ -60,6 +61,7 @@ def register_hooks(app):
     @app.before_request
     def load_user():
         g.user = get_current_user()
+        g.user.notification = get_notification(g.user)
 
 
 def register_jinja(app):
