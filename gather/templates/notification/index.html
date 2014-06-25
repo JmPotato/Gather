@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block title %}提醒{% endblock %}
+
+{% from "snippet/nav.html" import navigation %}
+{% block nav %}{{ navigation('notification') }}{% endblock %}
+
+{% block content %}
+  <div id="cards">
+    <header>提醒</header>
+    {% for n in notifications.items %}
+    <div class="topic-list">
+      {% set author_url = url_for("user.profile", name=n.author.username) %}
+      <a href="{{ author_url }}" class="user-link">
+        <img src="{{ n.author.avatar(48) }}" class="avatar" alt="{{ n.author.username }}"/>
+      </a>
+      <div class="topic-info">
+        {% set topic_url = url_for("topic.topic", topic_id=n.topic.id) + "#reply_count_%s" % n.floor %}
+        <a href="{{ author_url }}" class="user-link">{{ reply.author.username }}</a> 在 
+        <a href="{{ topic_url }}" class="topics-title">{{ n.topic.title }}</a> <span>回复了你</span>
+        <time datetime="{{ reply.created|xmldatetime }}"></time>
+        {% if reply.changed %}
+        | <span>修改于</span> <time datetime="{{ reply.changed|xmldatetime }}"></time>
+        {% endif %}
+        <div class="topic-meta">
+          <blockquote>{{ n.content }}</blockquote>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+{% endblock %}

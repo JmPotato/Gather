@@ -20,6 +20,12 @@
     <a href="{{ url_for('topic.create') }}"{% if current == 'create' %} class="active"{% endif %}>
       <i class="fa fa-edit"></i>
     </a>
+    <a href="{{ url_for('notification.index') }}"{% if current == 'notification' %} class="active"{% endif %}>
+    {% if g.notification %}
+      <i class="fa fa-bell-o">{{ g.notification.count }}</i>
+    {% endif %}
+      <i class="fa fa-bell-o"></i>
+    {% endif %}
     <a href="{{ url_for('account.settings') }}"{% if current == 'settings' %} class="active"{% endif %}>
       <i class="fa fa-gear"></i>
     </a>

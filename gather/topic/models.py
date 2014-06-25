@@ -111,7 +111,7 @@ class Topic(db.Model):
             "node": self.node_id,
             "content": self.content,
             "created": self.created,
-            "repliy_count": self.replies.count(),
+            "reply_count": self.replies.count(),
             "updated": self.updated,
             "changed": self.changed,
             "replies": [reply.to_dict() for reply in self.replies]

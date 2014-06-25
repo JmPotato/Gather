@@ -5,6 +5,7 @@ from flask import url_for, g, redirect, render_template, abort, request
 from gather.utils import require_token
 from gather.account.utils import require_login, require_staff, require_admin
 from gather.node.models import Node
+from gather.notification.utils import new_notifications
 from .forms import CreateTopicForm, ChangeTopicForm, ReplyForm, ChangeReplyForm
 from .models import Topic, Reply
 
@@ -31,6 +32,7 @@ def create():
             form.node.data = Node.query.get_or_404(nid)
     if form.validate_on_submit():
         topic = form.create()
+        new_notifications(topic, is_topic=True, topic_id=topic.id)
         return redirect(url_for(".topic", topic_id=topic.id))
     return render_template("topic/create.html", form=form)
 
@@ -41,7 +43,8 @@ def topic(topic_id, page):
     topic = Topic.query.get_or_404(topic_id)
     form = ReplyForm()
     if g.user and form.validate_on_submit():
-        form.create(topic=topic)
+        reply = form.create(topic=topic)
+        new_notifications(reply, is_topic=False, topic_id=reply.topic_id)
         return redirect(url_for(".topic", topic_id=topic.id, page=topic.last_page))
     replies = Reply.query.filter_by(topic=topic).order_by(Reply.id.asc())
     paginator = replies.paginate(page)
